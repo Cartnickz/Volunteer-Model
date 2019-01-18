@@ -13,17 +13,26 @@ as_tibble(dataset)
 
 dataset$bogus <- rnorm(nrow(dataset)) > 0
 dataset$training_cases <- rnorm(nrow(dataset)) > 0
+summary(dataset)
 
-model <- lm(volunteer ~ school_type + extra, data = subset(dataset, training_cases))
-model_output <- evaluate_model(model, newdata = subset(dataset, !training_cases))
+model <- lm(volunteer ~  leadership, data = subset(dataset, training_cases))
 
-aug_model <- loess(volunteer ~ school_type + extra, data = subset(dataset, training_cases))
-aug_model_output <- evaluate_model(aug_model, newdata = subset(dataset, !training_cases))
+summary(model)
+fmodel(model, ~leadership)
+ggplot(data = dataset) +
+  geom_point(mapping = aes(x = leadership, y = volunteer, size = volunteer))
+model_output <- evaluate_model(model, data = subset(dataset, !training_cases))
 
-model_diff <- with(dataset, volunteer - model_output)
-aug_model_diff <- with(dataset, volunteer - aug_model_output)
+print(model_output)
+
+aug_model <- lm(volunteer ~ help_others + leadership, data = subset(dataset, training_cases))
+aug_model_output <- evaluate_model(aug_model, data = subset(dataset, !training_cases))
+
+model_diff <- with(dataset, volunteer - model_output$volunteer)
+aug_model_diff <- with(dataset, volunteer - aug_model_output$volunteer)
+
 
 mean(model_diff ^ 2)
 mean(aug_model_diff ^ 2)
 
-fmodel(model, ~ school_type + extra)
+
