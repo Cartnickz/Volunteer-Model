@@ -4,6 +4,7 @@
 library(tidyverse)
 library(ggplot2)
 library(statisticalModeling)
+library(caret)
 
 # import dataset
 dataset <- read.csv("dataset.csv")
@@ -43,6 +44,9 @@ for(k in n:2) {
   }
 }
 
+# stratify dataset into "folds"
+folds <- createFolds(factor)
+
 # run through all combinations of models with significant variables
 sig_name <- sort_name[2:6] # chooses top 5 variables
 
@@ -50,7 +54,9 @@ for (i in 1:length(sig_name)) {
   com <- combn(sig_name, i)
   for (j in 1:ncol(com)) {
     form <- as.formula(paste("volunteer ~", paste(com[,j], collapse = "+")))
-    model <- lm (form, data = dataset)
-    summary(model)
+    print(form)
+    
+    model <- glm(form, data = dataset, family = "binomial")
+
   }
 }
