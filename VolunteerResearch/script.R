@@ -19,9 +19,7 @@ model <- lm(volunteer ~  leadership, data = subset(dataset, training_cases))
 
 summary(model)
 fmodel(model, ~leadership)
-ggplot(data = dataset) +
-  geom_point(mapping = aes(x = leadership, y = volunteer, size = volunteer))
-model_output <- evaluate_model(model, data = subset(dataset, !training_cases))
+
 
 print(model_output)
 

@@ -3,20 +3,28 @@ library(ggplot2)
 library(statisticalModeling)
 library(rpart)
 
+# importing dataset
 dataset <- read.csv("dataset.csv")
 
-list <- sapply(dataset, typeof)
-list[1]
-sapple(dataset, 2)
-
-
+# writing all column names to a list
 col_names <- colnames(dataset)
-print(col_names)
+
+bool_col <- NULL
+result_col <- NULL
 
 
-
-for (i in 3:ncol(dataset)) {
-  print(i)
-  if ()
-  cor(dataset[2], dataset[i])
+# sort by columns that are True/False and run a correlation to volunteer
+for (name in col_names) {
+  if (class(dataset[, name]) == "integer") {
+    print(name)
+    print(cor(dataset$volunteer, dataset[, name]))
+    
+    bool_col <- c(bool_col, name)
+    result_col <- c(result_col, cor(dataset$volunteer, dataset[, name]))
+  }
+  cat("\n")
 }
+
+# most related are leadership (+), boring (-))
+print(bool_col)
+print(result_col)
