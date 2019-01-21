@@ -59,7 +59,7 @@ for(k in n:2) {
 rows <- sample(nrow(dataset))
 dataset <- dataset[rows, ]
 
-split <- round(nrow(dataset) * 0.60)
+split <- round(nrow(dataset) * 0.70)
 train <- dataset[1:split, ]
 test <- dataset[(split+1):nrow(dataset), ]
 
@@ -69,7 +69,7 @@ train$volunteer <- as.factor(train$volunteer)
 form_list <- NULL
 result_list <- NULL 
 
-sig_name <- sort_name[2:11] # chooses top 10 variables
+sig_name <- sort_name[2:9] # chooses top 10 variables
 for (i in 1:length(sig_name)) {
   com <- combn(sig_name, i)
   for (j in 1:ncol(com)) {
@@ -110,10 +110,36 @@ print(sort_form[1:10])
 
 # use model on test data
 model_final <- train(sort_form[[1]], data = train, method = "glm", family = "binomial")
-p_final <- predict(model, test, type = "prob")
+p_final <- predict(model, test, type = "raw")
+p_final_prob <- predict(model, test, type = "prob")
 
-y_n <- ifelse(p_final > 0.5, "Y", "N")
-p_class <- factor(y_n, levels = levels(test$volunteer))
+str(p_final)
+correct <- 0
+volunteered <- 0
+for (i in 1:length(p_final)) {
+  if (p_final[[i]] == train[i, "volunteer"]) {
+    correct <- correct + 1
+  } 
+}
 
-confusionMatrix(p_class, test$volunteer)
+print(correct)
+
+y_n <- ifelse(p_final_prob > 0.30, "Y", "N")
+test_con <- ifelse(test[["volunteer"]] == 1, "Y", "N")
+print(y_n)
+p_class <- factor(y_n[,1], levels = c("Y","N"))
+test_class <- factor(test_con, levels = c("Y","N"))
+
+print(test_con)
+print(p_class)
+
+levels(test_class)
+
+confusionMatrix(p_class, test_class)
+
+print(length(p_class))
+print(length(test_class))
+
+summary(dataset)
+
 
