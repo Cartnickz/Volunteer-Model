@@ -84,7 +84,7 @@ for (i in 1:length(sig_name)) {
   }
 }
 
-# order models from greatest AOC to lowest AOC
+# order models from greatest AUC to lowest AUC
 sort_form <- form_list
 sort_result <- result_list
 
@@ -108,5 +108,12 @@ for(k in n:2) {
 print(sort_result[1:10])
 print(sort_form[1:10])
 
+# use model on test data
+model_final <- train(sort_form[[1]], data = train, method = "glm", family = "binomial")
+p_final <- predict(model, test, type = "prob")
 
+y_n <- ifelse(p_final > 0.5, "Y", "N")
+p_class <- factor(y_n, levels = levels(test$volunteer))
+
+confusionMatrix(p_class, test$volunteer)
 
