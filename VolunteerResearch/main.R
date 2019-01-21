@@ -1,33 +1,44 @@
+#install.packages("stringi")
+#install.packages("caTools")
 #install.packages("tidyverse")
 #install.packages("devtools")
 #devtools::install_github("dtkaplan/statisticalModeling")
+#install.packages("colorspace")
+library(colorspace)
 library(tidyverse)
 library(ggplot2)
 library(statisticalModeling)
 library(caret)
+library(caTools)
 
+set.seed(101)
 # import dataset
 dataset <- read.csv("dataset.csv")
+dataset$school = NULL
 
 # write all column names to a list
 col_names <- colnames(dataset)
 
 # run correlation between all columns with type "integer" and volunteer column
-name_col <- NULL
+name_col <- NULL 
 cor_col <- NULL
-
 for (name in col_names) {
   if (class(dataset[, name]) == "integer") {
-    name_col <- c(bool_col, name)
+    name_col <- c(name_col, name)
     cor_col <- c(cor_col, cor(dataset$volunteer, dataset[, name]))
   }
 }
 
 # order variables from greatest coorelation to smallest correlation
+sort_num <- NULL 
+sort_name <- NULL 
+
 sort_name <- name_col
 sort_num <- cor_col
-
 n <- length(sort_num)
+
+print(n)
+
 for(k in n:2) {
   i <- 1
   while (i < k) {
@@ -44,19 +55,58 @@ for(k in n:2) {
   }
 }
 
-# stratify dataset into "folds"
-folds <- createFolds(factor)
+# shuffle dataset and split 60:40
+rows <- sample(nrow(dataset))
+dataset <- dataset[rows, ]
+
+split <- round(nrow(dataset) * 0.60)
+train <- dataset[1:split, ]
+test <- dataset[(split+1):nrow(dataset), ]
+
+train$volunteer <- as.factor(train$volunteer)
 
 # run through all combinations of models with significant variables
-sig_name <- sort_name[2:6] # chooses top 5 variables
+form_list <- NULL
+result_list <- NULL 
 
+sig_name <- sort_name[2:11] # chooses top 10 variables
 for (i in 1:length(sig_name)) {
   com <- combn(sig_name, i)
   for (j in 1:ncol(com)) {
     form <- as.formula(paste("volunteer ~", paste(com[,j], collapse = "+")))
-    print(form)
+    form_list <- c(form_list, form)
     
-    model <- glm(form, data = dataset, family = "binomial")
+    model <- train(form, data = train, method = "glm", family = "binomial")
+    p <- predict(model, test, type = "prob")
 
+    result <- colAUC(p, test$volunteer, plotROC = TRUE)
+    result_list <- c(result_list, result[1])
   }
 }
+
+# order models from greatest AOC to lowest AOC
+sort_form <- form_list
+sort_result <- result_list
+
+n <- length(sort_form)
+for(k in n:2) {
+  i <- 1
+  while (i < k) {
+    if (sort_result[i] < sort_result[i + 1]) {
+      temp_result <- sort_result[i + 1]
+      sort_result[i + 1] <- sort_result[i]
+      sort_result[i] <- temp_result
+      
+      temp_form <- sort_form[i + 1]
+      sort_form[i + 1] <- sort_form[i]
+      sort_form[i] <- temp_form
+    }
+    i <- i + 1
+  }
+}
+
+print(sort_result[1:10])
+print(sort_form[1:10])
+
+
+
