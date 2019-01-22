@@ -72,21 +72,42 @@ form_list <- NULL
 result_list <- NULL
 
 
-sig_name <- sort_name[2:9] # chooses top 8 variables
+sig_name <- sort_name#[2:11] # chooses top 8 variables
 for (i in 1:length(sig_name)) {
   com <- combn(sig_name, i)
   for (j in 1:ncol(com)) {
     form <- as.formula(paste("volunteer ~", paste(com[,j], collapse = "+")))
     form_list <- c(form_list, form)
     
-    model <- train(form, data = train, method = "glm", family = "binomial")
-    p <- predict(model, test, type = "prob")
+    #model <- train(form, data = train, method = "glm", family = "binomial")
 
-    result <- colAUC(p, test$volunteer, plotROC = TRUE)
-    result_list <- c(result_list, result[1])
+    #p <- predict(model, test, type = "prob")
+
+    #result <- colAUC(p, test$volunteer, plotROC = TRUE)
+    #result_list <- c(result_list, result[1])
   }
 }
+#############################
+form <- as.formula(paste("volunteer ~", paste(col_names[2:length(col_names)], collapse = "+")))
+myGrid <- data.frame(.mtry = c(2, 7, 13, 18),
+                     .splitrule = "extratrees",
+                     .min.node.size = 5)
 
+print(form)
+model <- train(form, 
+               data = train, 
+               method = "ranger", 
+               #tuneLength = 20,
+               tuneGrid = myGrid)
+               
+               #trControl = trainControl(method = "cv", 
+               #                         number = 5, 
+               #                         verboseIter = TRUE))
+
+plot(model)
+
+
+############################
 # order models from greatest AUC to lowest AUC
 sort_form <- form_list
 sort_result <- result_list
