@@ -55,7 +55,7 @@ for(k in n:2) {
   }
 }
 
-# shuffle dataset and split 60:40
+# shuffle dataset and split 70:30
 rows <- sample(nrow(dataset))
 dataset <- dataset[rows, ]
 
@@ -67,9 +67,10 @@ train$volunteer <- as.factor(train$volunteer)
 
 # run through all combinations of models with significant variables
 form_list <- NULL
-result_list <- NULL 
+result_list <- NULL
 
-sig_name <- sort_name[2:9] # chooses top 10 variables
+
+sig_name <- sort_name[2:9] # chooses top 8 variables
 for (i in 1:length(sig_name)) {
   com <- combn(sig_name, i)
   for (j in 1:ncol(com)) {
@@ -113,7 +114,6 @@ model_final <- train(sort_form[[1]], data = train, method = "glm", family = "bin
 p_final <- predict(model, test, type = "raw")
 p_final_prob <- predict(model, test, type = "prob")
 
-str(p_final)
 correct <- 0
 volunteered <- 0
 for (i in 1:length(p_final)) {
@@ -122,24 +122,13 @@ for (i in 1:length(p_final)) {
   } 
 }
 
-print(correct)
-
 y_n <- ifelse(p_final_prob > 0.30, "Y", "N")
 test_con <- ifelse(test[["volunteer"]] == 1, "Y", "N")
-print(y_n)
 p_class <- factor(y_n[,1], levels = c("Y","N"))
 test_class <- factor(test_con, levels = c("Y","N"))
 
-print(test_con)
-print(p_class)
-
 levels(test_class)
-
 confusionMatrix(p_class, test_class)
 
-print(length(p_class))
-print(length(test_class))
-
-summary(dataset)
 
 
