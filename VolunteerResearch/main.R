@@ -71,7 +71,6 @@ train$volunteer <- as.factor(train$volunteer)
 form_list <- NULL
 result_list <- NULL
 
-
 sig_name <- sort_name[2:9] # chooses top 8 variables
 for (i in 1:length(sig_name)) {
   com <- combn(sig_name, i)
@@ -82,8 +81,10 @@ for (i in 1:length(sig_name)) {
     model <- train(form, data = train, method = "glm", family = "binomial")
     p <- predict(model, test, type = "prob")
 
-    result <- colAUC(p, test$volunteer, plotROC = TRUE)
+    result <- colAUC(p, test$volunteer, plotROC = FALSE)
     result_list <- c(result_list, result[1])
+    
+    cat("Model ", j, " of ", ncol(com), " Completed!\n" )
   }
 }
 
@@ -112,25 +113,21 @@ print(sort_result[1:10])
 print(sort_form[1:10])
 
 # use model on test data
-model_final <- train(sort_form[[1]], data = train, method = "glm", family = "binomial")
-p_final <- predict(model, test, type = "raw")
-p_final_prob <- predict(model, test, type = "prob")
+testset <- read.csv("testset.csv")
+summary(testset)
 
-correct <- 0
-volunteered <- 0
-for (i in 1:length(p_final)) {
-  if (p_final[[i]] == train[i, "volunteer"]) {
-    correct <- correct + 1
-  } 
-}
+model_final <- train(sort_form[[1]], data = train, method = "glm", family = "binomial")  # create final model
 
-y_n <- ifelse(p_final_prob > 0.30, "Y", "N")
-test_con <- ifelse(test[["volunteer"]] == 1, "Y", "N")
-p_class <- factor(y_n[,1], levels = c("Y","N"))
-test_class <- factor(test_con, levels = c("Y","N"))
+p_final <- predict(model_final, testset, type = "prob")  # create ROC curve
+result_ROC <- colAUC(p_final, testset[["volunteer"]], plotROC = TRUE)
+print(result_ROC)
 
-levels(test_class)
-confusionMatrix(p_class, test_class)
+p_final <- predict(model_final, testset, type = "raw")  # predict and produce actual predictions
+
+test_con <- ifelse(testset[["volunteer"]] == 1, "1", "0")
+test_class <- factor(test_con, levels = c("1","0"))
+confusionMatrix(p_final, test_class)
+
 
 
 
