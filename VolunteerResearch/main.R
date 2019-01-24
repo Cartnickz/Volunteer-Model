@@ -13,7 +13,8 @@ library(statisticalModeling)
 library(caret)
 library(caTools)
 
-set.seed(101)
+set.seed(101) # allows for randomization to be reproducable (for testing purposes)
+
 # import dataset
 dataset <- read.csv("dataset.csv")
 dataset$school = NULL
@@ -21,7 +22,7 @@ dataset$school = NULL
 # write all column names to a list
 col_names <- colnames(dataset)
 
-# run correlation between all columns with type "integer" and volunteer column
+# run correlation between all columns with type "integer" (explanatory variables) and volunteer column
 name_col <- NULL 
 cor_col <- NULL
 for (name in col_names) {
@@ -41,7 +42,7 @@ n <- length(sort_num)
 
 print(n)
 
-for(k in n:2) {
+for(k in n:2) {  # Bubble sort - sorts explanatory variables by their correlation coefficient
   i <- 1
   while (i < k) {
     if (abs(sort_num[i]) < abs(sort_num[i + 1])) {
@@ -71,7 +72,7 @@ train$volunteer <- as.factor(train$volunteer)
 form_list <- NULL
 result_list <- NULL
 
-sig_name <- sort_name[2:9] # chooses top 8 variables
+sig_name <- sort_name[2:11] # chooses top 8 variables
 for (i in 1:length(sig_name)) {
   com <- combn(sig_name, i)
   for (j in 1:ncol(com)) {
@@ -84,7 +85,7 @@ for (i in 1:length(sig_name)) {
     result <- colAUC(p, test$volunteer, plotROC = FALSE)
     result_list <- c(result_list, result[1])
     
-    cat("Model ", j, " of ", ncol(com), " Completed!\n" )
+    cat("Model: ", j, "/", ncol(com), " \tRound: ", i, "/", length(sig_name), "\n" )
   }
 }
 
@@ -116,18 +117,27 @@ print(sort_form[1:10])
 testset <- read.csv("testset.csv")
 summary(testset)
 
-model_final <- train(sort_form[[1]], data = train, method = "glm", family = "binomial")  # create final model
+model_final <- train(sort_form[[2]], data = train, method = "glm", family = "binomial")  # create final model
 
-p_final <- predict(model_final, testset, type = "prob")  # create ROC curve
+p_final <- predict(model_final, testset, type = "prob")  # create ROC curve based on probablities given by models
 result_ROC <- colAUC(p_final, testset[["volunteer"]], plotROC = TRUE)
 print(result_ROC)
 
-p_final <- predict(model_final, testset, type = "raw")  # predict and produce actual predictions
+p_final <- predict(model_final, testset, type = "raw")  # predict and produce classifications
 
+# produce a confusion matrix based on results
 test_con <- ifelse(testset[["volunteer"]] == 1, "1", "0")
 test_class <- factor(test_con, levels = c("1","0"))
 confusionMatrix(p_final, test_class)
 
+# extra stats
+for (i in (length(sort_form)-15):length(sort_form)) {
+  cat(i, ",", toString(sort_form[[i]]), "\t,", sort_result[[i]], "\n")
+}
 
+test_col <- colnames(testset)
 
+for (i in 2:length(testset)) {
+  cat(test_col[[i]], ",", mean(testset[, test_col[[i]]]), "\n")
+}
 
