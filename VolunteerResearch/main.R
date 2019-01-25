@@ -6,6 +6,7 @@
 #install.packages("colorspace")
 #install.packages("caret")
 #install.packages("e1071")
+
 library(colorspace)
 library(tidyverse)
 library(ggplot2)
@@ -27,11 +28,14 @@ name_col <- NULL
 cor_col <- NULL
 for (name in col_names) {
   if (class(dataset[, name]) == "integer") {
-    name_col <- c(name_col, name)
-    cor_col <- c(cor_col, cor(dataset$volunteer, dataset[, name]))
+    if ((cor.test(dataset$volunteer, dataset[, name])[[3]]) <= 0.05) {
+      name_col <- c(name_col, name)
+      cor_col <- c(cor_col, cor(dataset$volunteer, dataset[, name]))
+    }
   }
 }
 
+print(name_col)
 # order variables from greatest coorelation to smallest correlation
 sort_num <- NULL 
 sort_name <- NULL 
@@ -71,6 +75,7 @@ train$volunteer <- as.factor(train$volunteer)
 # run through all combinations of models with significant variables
 form_list <- NULL
 result_list <- NULL
+
 
 sig_name <- sort_name[2:11] # chooses top 8 variables
 for (i in 1:length(sig_name)) {
@@ -124,6 +129,7 @@ result_ROC <- colAUC(p_final, testset[["volunteer"]], plotROC = TRUE)
 print(result_ROC)
 
 p_final <- predict(model_final, testset, type = "raw")  # predict and produce classifications
+coef(model)
 
 # produce a confusion matrix based on results
 test_con <- ifelse(testset[["volunteer"]] == 1, "1", "0")
@@ -141,3 +147,4 @@ for (i in 2:length(testset)) {
   cat(test_col[[i]], ",", mean(testset[, test_col[[i]]]), "\n")
 }
 
+print(col_names[[3]])
