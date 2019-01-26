@@ -75,12 +75,15 @@ train$volunteer <- as.factor(train$volunteer)
 # run through all combinations of models with significant variables
 form_list <- NULL
 result_list <- NULL
+list_list <- NULL
 
 
 sig_name <- sort_name[2:11] # chooses top 8 variables
 for (i in 1:length(sig_name)) {
   com <- combn(sig_name, i)
   for (j in 1:ncol(com)) {
+    list_list <- c(list_list, paste(com[,j], collapse = ","))
+    
     form <- as.formula(paste("volunteer ~", paste(com[,j], collapse = "+")))
     form_list <- c(form_list, form)
     
@@ -147,4 +150,4 @@ for (i in 2:length(testset)) {
   cat(test_col[[i]], ",", mean(testset[, test_col[[i]]]), "\n")
 }
 
-print(col_names[[3]])
+
